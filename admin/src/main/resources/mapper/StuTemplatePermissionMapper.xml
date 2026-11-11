@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.studentportal.mapper.StuTemplatePermissionMapper">
+
+    <resultMap id="StuTemplatePermissionMap" type="cn.yq.modules.studentportal.domain.entity.StuTemplatePermissionEntity">
+        <id property="id" column="id"/>
+        <result property="templateId" column="template_id"/>
+        <result property="permissionId" column="permission_id"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectByTemplateId" resultMap="StuTemplatePermissionMap">
+        select id, template_id, permission_id, created_at
+        from stu_template_permission
+        where template_id = #{templateId}
+        order by id asc
+    </select>
+
+    <delete id="deleteByTemplateId">
+        delete from stu_template_permission where template_id = #{templateId}
+    </delete>
+
+    <insert id="insertTemplatePermissions">
+        insert into stu_template_permission (template_id, permission_id, created_at)
+        values
+        <foreach collection="permissionIds" item="permissionId" separator=",">
+            (#{templateId}, #{permissionId}, now())
+        </foreach>
+    </insert>
+</mapper>

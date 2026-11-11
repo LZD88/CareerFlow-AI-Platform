@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.system.mapper.SysPermissionMapper">
+
+    <!-- 权限实体映射 -->
+    <resultMap id="SysPermissionMap" type="cn.yq.modules.system.domain.entity.SysPermissionEntity">
+        <id property="id" column="id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="permissionCode" column="permission_code"/>
+        <result property="permissionName" column="permission_name"/>
+        <result property="permissionType" column="permission_type"/>
+        <result property="apiPath" column="api_path"/>
+        <result property="sortNum" column="sort_num"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 权限基础字段 -->
+    <sql id="BaseColumns">
+        id, parent_id, permission_code, permission_name, permission_type, api_path, sort_num, description, status, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_permission (parent_id, permission_code, permission_name, permission_type, api_path, sort_num, description, status, created_at, updated_at)
+        values (#{parentId}, #{permissionCode}, #{permissionName}, #{permissionType}, #{apiPath}, #{sortNum}, #{description}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateById">
+        update sys_permission
+        set parent_id = #{parentId},
+            permission_name = #{permissionName},
+            permission_type = #{permissionType},
+            api_path = #{apiPath},
+            sort_num = #{sortNum},
+            description = #{description},
+            status = #{status},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="SysPermissionMap">
+        select <include refid="BaseColumns"/> from sys_permission where id = #{id}
+    </select>
+
+    <select id="selectByCode" resultMap="SysPermissionMap">
+        select <include refid="BaseColumns"/> from sys_permission where permission_code = #{permissionCode}
+    </select>
+
+    <select id="selectPage" resultMap="SysPermissionMap">
+        select <include refid="BaseColumns"/>
+        from sys_permission
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (permission_code like concat('%', #{keyword}, '%')
+                or permission_name like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="permissionType != null and permissionType != ''">
+                and permission_type = #{permissionType}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by sort_num asc, id asc
+    </select>
+
+    <select id="selectAll" resultMap="SysPermissionMap">
+        select <include refid="BaseColumns"/>
+        from sys_permission
+        order by sort_num asc, id asc
+    </select>
+
+    <select id="selectAllByIds" resultMap="SysPermissionMap">
+        select <include refid="BaseColumns"/>
+        from sys_permission
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="countByParentId" resultType="int">
+        select count(1)
+        from sys_permission
+        where parent_id = #{parentId}
+    </select>
+
+    <delete id="deleteById">
+        delete from sys_permission where id = #{id}
+    </delete>
+</mapper>

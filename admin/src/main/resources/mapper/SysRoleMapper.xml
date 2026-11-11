@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.system.mapper.SysRoleMapper">
+
+    <!-- 角色实体映射 -->
+    <resultMap id="SysRoleMap" type="cn.yq.modules.system.domain.entity.SysRoleEntity">
+        <id property="id" column="id"/>
+        <result property="roleCode" column="role_code"/>
+        <result property="roleName" column="role_name"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 角色基础字段 -->
+    <sql id="BaseColumns">
+        id, role_code, role_name, description, status, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_role (role_code, role_name, description, status, created_at, updated_at)
+        values (#{roleCode}, #{roleName}, #{description}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateById">
+        update sys_role
+        set role_name = #{roleName},
+            description = #{description},
+            status = #{status},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="SysRoleMap">
+        select <include refid="BaseColumns"/> from sys_role where id = #{id}
+    </select>
+
+    <select id="selectByCode" resultMap="SysRoleMap">
+        select <include refid="BaseColumns"/> from sys_role where role_code = #{roleCode}
+    </select>
+
+    <select id="selectPage" resultMap="SysRoleMap">
+        select <include refid="BaseColumns"/>
+        from sys_role
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (role_code like concat('%', #{keyword}, '%')
+                or role_name like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <delete id="deleteById">
+        delete from sys_role where id = #{id}
+    </delete>
+
+    <!-- 查询角色绑定的权限 -->
+    <select id="selectPermissionsByRoleId" resultType="cn.yq.modules.system.domain.entity.SysPermissionEntity">
+        select p.*
+        from sys_permission p
+        inner join sys_role_permission rp on rp.permission_id = p.id
+        where rp.role_id = #{roleId}
+        order by p.id desc
+    </select>
+
+    <!-- 删除角色已有权限关系 -->
+    <delete id="deleteRolePermissions">
+        delete from sys_role_permission where role_id = #{roleId}
+    </delete>
+
+    <!-- 重新写入角色权限关系 -->
+    <insert id="insertRolePermissions">
+        insert into sys_role_permission (role_id, permission_id, created_at)
+        values
+        <foreach collection="permissionIds" item="permissionId" separator=",">
+            (#{roleId}, #{permissionId}, now())
+        </foreach>
+    </insert>
+</mapper>

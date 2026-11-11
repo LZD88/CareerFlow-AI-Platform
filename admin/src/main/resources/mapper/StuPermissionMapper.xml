@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.studentportal.mapper.StuPermissionMapper">
+
+    <resultMap id="StuPermissionMap" type="cn.yq.modules.studentportal.domain.entity.StuPermissionEntity">
+        <id property="id" column="id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="permissionCode" column="permission_code"/>
+        <result property="permissionName" column="permission_name"/>
+        <result property="permissionType" column="permission_type"/>
+        <result property="apiPath" column="api_path"/>
+        <result property="routePath" column="route_path"/>
+        <result property="icon" column="icon"/>
+        <result property="sortNum" column="sort_num"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, parent_id, permission_code, permission_name, permission_type,
+        api_path, route_path, icon, sort_num, description, status, created_at, updated_at
+    </sql>
+
+    <select id="selectAll" resultMap="StuPermissionMap">
+        select <include refid="BaseColumns"/>
+        from stu_permission
+        order by sort_num asc, id asc
+    </select>
+
+    <select id="selectAllByIds" resultMap="StuPermissionMap">
+        select <include refid="BaseColumns"/>
+        from stu_permission
+        where status = 1
+          and id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        order by sort_num asc, id asc
+    </select>
+</mapper>

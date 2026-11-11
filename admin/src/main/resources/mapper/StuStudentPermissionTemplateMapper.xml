@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.studentportal.mapper.StuStudentPermissionTemplateMapper">
+
+    <resultMap id="StuStudentPermissionTemplateMap" type="cn.yq.modules.studentportal.domain.entity.StuStudentPermissionTemplateEntity">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="templateId" column="template_id"/>
+        <result property="effectiveStartTime" column="effective_start_time"/>
+        <result property="effectiveEndTime" column="effective_end_time"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="selectByStudentId" resultMap="StuStudentPermissionTemplateMap">
+        select id, student_id, template_id, effective_start_time, effective_end_time, status, created_at, updated_at
+        from stu_student_permission_template
+        where student_id = #{studentId}
+        order by id desc
+    </select>
+
+    <select id="selectByStudentIdAndTemplateId" resultMap="StuStudentPermissionTemplateMap">
+        select id, student_id, template_id, effective_start_time, effective_end_time, status, created_at, updated_at
+        from stu_student_permission_template
+        where student_id = #{studentId}
+          and template_id = #{templateId}
+        limit 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into stu_student_permission_template (
+            student_id, template_id, effective_start_time, effective_end_time, status, created_at, updated_at
+        ) values (
+            #{studentId}, #{templateId}, #{effectiveStartTime}, #{effectiveEndTime}, #{status}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateById">
+        update stu_student_permission_template
+        set effective_start_time = #{effectiveStartTime},
+            effective_end_time = #{effectiveEndTime},
+            status = #{status},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <update id="disableByStudentId">
+        update stu_student_permission_template
+        set status = 0,
+            updated_at = now()
+        where student_id = #{studentId}
+          and status = 1
+    </update>
+</mapper>
