@@ -1,0 +1,47 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: yq-ai-admin
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+pagehelper:
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+yq:
+  feishu:
+    app-id: ${YQ_FEISHU_APP_ID:}
+    app-secret: ${YQ_FEISHU_APP_SECRET:}
+  volcengine:
+    tls:
+      read-timeout-ms: ${YQ_VOLCENGINE_TLS_READ_TIMEOUT_MS:10000}
+      connect-timeout-ms: ${YQ_VOLCENGINE_TLS_CONNECT_TIMEOUT_MS:5000}
+  python:
+    agent:
+      enabled: ${YQ_PYTHON_AGENT_ENABLED:true}
+      base-url: ${YQ_PYTHON_AGENT_BASE_URL:http://127.0.0.1:9000}
+      diagnose-path: ${YQ_PYTHON_AGENT_DIAGNOSE_PATH:/api/diagnose-log}
+      student-chat-stream-path: ${YQ_PYTHON_AGENT_STUDENT_CHAT_STREAM_PATH:/api/student-chat/stream}
+      knowledge-ingest-text-path: ${YQ_PYTHON_AGENT_KNOWLEDGE_INGEST_TEXT_PATH:/api/knowledge-base/ingest-text}
+      data-analysis-generate-sql-path: ${YQ_PYTHON_AGENT_DATA_ANALYSIS_GENERATE_SQL_PATH:/api/data-analysis/generate-sql}
+      data-analysis-interpret-result-path: ${YQ_PYTHON_AGENT_DATA_ANALYSIS_INTERPRET_RESULT_PATH:/api/data-analysis/interpret-result}
+      data-analysis-generate-sql-timeout-ms: ${YQ_PYTHON_AGENT_DATA_ANALYSIS_GENERATE_SQL_TIMEOUT_MS:180000}
+      data-analysis-interpret-result-timeout-ms: ${YQ_PYTHON_AGENT_DATA_ANALYSIS_INTERPRET_RESULT_TIMEOUT_MS:180000}
+      media-agent-topics-path: ${YQ_PYTHON_AGENT_MEDIA_AGENT_TOPICS_PATH:/api/media-agent/topics}
+      media-agent-topics-timeout-ms: ${YQ_PYTHON_AGENT_MEDIA_AGENT_TOPICS_TIMEOUT_MS:120000}
+      media-agent-text-draft-path: ${YQ_PYTHON_AGENT_MEDIA_AGENT_TEXT_DRAFT_PATH:/api/media-agent/drafts/generate-text}
+      media-agent-text-draft-timeout-ms: ${YQ_PYTHON_AGENT_MEDIA_AGENT_TEXT_DRAFT_TIMEOUT_MS:180000}
+      timeout-ms: ${YQ_PYTHON_AGENT_TIMEOUT_MS:60000}
+  mock-interview:
+    realtime-token-secret: ${YQ_MOCK_INTERVIEW_REALTIME_TOKEN_SECRET:change-me-mock-interview-realtime-token-secret}
+    realtime-token-expire-seconds: ${YQ_MOCK_INTERVIEW_REALTIME_TOKEN_EXPIRE_SECONDS:600}
+    python-realtime-ws-url: ${YQ_MOCK_INTERVIEW_PYTHON_REALTIME_WS_URL:ws://127.0.0.1:9000/api/mock-interview/realtime}

@@ -1,0 +1,41 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /yq-admin
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${LOCAL_DB_URL:jdbc:mysql://127.0.0.1:3306/training_career_local?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
+    username: ${LOCAL_DB_USER:training_local}
+    password: ${LOCAL_DB_PASSWORD:training-local-db}
+  data:
+    redis:
+      host: ${LOCAL_REDIS_HOST:127.0.0.1}
+      port: ${LOCAL_REDIS_PORT:6380}
+      password: ${LOCAL_REDIS_PASSWORD:training-local-redis}
+      database: 4
+      timeout: 5000ms
+yq:
+  cors:
+    allowed-origins:
+      - http://127.0.0.1:5173
+      - http://localhost:5173
+  feishu:
+    redirect-uri: http://127.0.0.1:5173/feishu/callback
+  yeepay:
+    parent-merchant-no: ${YQ_YEEPAY_PARENT_MERCHANT_NO:}
+    merchant-no: ${YQ_YEEPAY_MERCHANT_NO:}
+    sdk-config-file: ${YQ_YEEPAY_SDK_CONFIG_FILE:}
+    fund-process-type: REAL_TIME
+    memo-prefix: training-enrollment
+volcengine:
+  tos:
+    endpoint: tos-cn-shanghai.volces.com
+    region: cn-shanghai
+    bucketName: ${TOS_BUCKET_NAME:}
+    access-key: ${TOS_ACCESS_KEY:}
+    secret-key: ${TOS_SECRET_KEY:}
+logging:
+  level:
+    root: INFO
+    cn.yq: INFO
