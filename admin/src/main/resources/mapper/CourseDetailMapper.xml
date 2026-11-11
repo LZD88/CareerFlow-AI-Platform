@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.CourseDetailMapper">
+
+    <!-- 课程详情实体映射 -->
+    <resultMap id="CourseDetailMap" type="cn.yq.modules.teaching.domain.entity.CourseDetailEntity">
+        <id property="id" column="id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="stageName" column="stage_name"/>
+        <result property="dayNum" column="day_num"/>
+        <result property="courseContent" column="course_content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, course_id, stage_name, day_num, course_content, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into edu_course_detail (course_id, stage_name, day_num, course_content, created_at, updated_at)
+        values (#{courseId}, #{stageName}, #{dayNum}, #{courseContent}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <insert id="insertBatch">
+        insert into edu_course_detail (course_id, stage_name, day_num, course_content, created_at, updated_at)
+        values
+        <foreach collection="details" item="item" separator=",">
+            (#{item.courseId}, #{item.stageName}, #{item.dayNum}, #{item.courseContent}, #{item.createdAt}, #{item.updatedAt})
+        </foreach>
+    </insert>
+
+    <update id="updateById">
+        update edu_course_detail
+        set stage_name = #{stageName},
+            day_num = #{dayNum},
+            course_content = #{courseContent},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <update id="updateBatchById">
+        update edu_course_detail
+        set stage_name = case id
+        <foreach collection="details" item="item">
+            when #{item.id} then #{item.stageName}
+        </foreach>
+        end,
+            course_content = case id
+        <foreach collection="details" item="item">
+            when #{item.id} then #{item.courseContent}
+        </foreach>
+        end,
+            updated_at = case id
+        <foreach collection="details" item="item">
+            when #{item.id} then #{item.updatedAt}
+        </foreach>
+        end
+        where id in
+        <foreach collection="details" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <update id="increaseDayNumFrom">
+        update edu_course_detail
+        set day_num = day_num + 1,
+            updated_at = now()
+        where course_id = #{courseId}
+          and day_num &gt;= #{dayNum}
+    </update>
+
+    <update id="decreaseDayNumAfter">
+        update edu_course_detail
+        set day_num = day_num - 1,
+            updated_at = now()
+        where course_id = #{courseId}
+          and day_num &gt; #{dayNum}
+    </update>
+
+    <select id="selectById" resultMap="CourseDetailMap">
+        select <include refid="BaseColumns"/> from edu_course_detail where id = #{id}
+    </select>
+
+    <select id="selectByCourseId" resultMap="CourseDetailMap">
+        select <include refid="BaseColumns"/>
+        from edu_course_detail
+        where course_id = #{courseId}
+        order by day_num asc, id asc
+    </select>
+
+    <delete id="deleteById">
+        delete from edu_course_detail where id = #{id}
+    </delete>
+
+    <delete id="deleteByCourseId">
+        delete from edu_course_detail where course_id = #{courseId}
+    </delete>
+</mapper>

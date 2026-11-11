@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.CampusMapper">
+
+    <!-- 校区实体映射，额外补出负责人名称用于前端展示 -->
+    <resultMap id="CampusMap" type="cn.yq.modules.teaching.domain.entity.CampusEntity">
+        <id property="id" column="id"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="principalUserId" column="principal_user_id"/>
+        <result property="principalName" column="principal_name"/>
+        <result property="address" column="address"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="remark" column="remark"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        c.id,
+        c.campus_name,
+        c.principal_user_id,
+        <!-- 优先展示真实姓名，其次昵称，最后兜底用户名 -->
+        ifnull(nullif(u.real_name, ''), ifnull(nullif(u.nickname, ''), u.username)) as principal_name,
+        c.address,
+        c.contact_phone,
+        c.remark,
+        c.status,
+        c.created_at,
+        c.updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into edu_campus (campus_name, principal_user_id, address, contact_phone, remark, status, created_at, updated_at)
+        values (#{campusName}, #{principalUserId}, #{address}, #{contactPhone}, #{remark}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateById">
+        update edu_campus
+        set campus_name = #{campusName},
+            principal_user_id = #{principalUserId},
+            address = #{address},
+            contact_phone = #{contactPhone},
+            remark = #{remark},
+            status = #{status},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="CampusMap">
+        select <include refid="BaseColumns"/>
+        from edu_campus c
+        left join sys_user u on u.id = c.principal_user_id
+        where c.id = #{id}
+    </select>
+
+    <select id="selectPage" resultMap="CampusMap">
+        select <include refid="BaseColumns"/>
+        from edu_campus c
+        left join sys_user u on u.id = c.principal_user_id
+        <where>
+            <!-- 关键词同时覆盖校区信息和负责人信息，方便运营检索 -->
+            <if test="keyword != null and keyword != ''">
+                and (
+                    c.campus_name like concat('%', #{keyword}, '%')
+                    or c.address like concat('%', #{keyword}, '%')
+                    or ifnull(u.real_name, '') like concat('%', #{keyword}, '%')
+                    or ifnull(u.nickname, '') like concat('%', #{keyword}, '%')
+                    or ifnull(u.username, '') like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="status != null">
+                and c.status = #{status}
+            </if>
+            <if test="principalUserId != null">
+                and c.principal_user_id = #{principalUserId}
+            </if>
+        </where>
+        order by c.id desc
+    </select>
+
+    <delete id="deleteById">
+        delete from edu_campus where id = #{id}
+    </delete>
+</mapper>

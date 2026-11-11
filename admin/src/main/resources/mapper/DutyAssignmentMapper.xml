@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.DutyAssignmentMapper">
+
+    <resultMap id="DutyAssignmentMap" type="cn.yq.modules.teaching.domain.entity.DutyAssignmentEntity">
+        <id property="id" column="id"/>
+        <result property="dutyDate" column="duty_date"/>
+        <result property="dutyType" column="duty_type"/>
+        <result property="classId" column="class_id"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="ClassDutyCandidateRecordMap" type="cn.yq.modules.teaching.domain.vo.res.ClassDutyCandidateRecordRes">
+        <result property="classId" column="class_id"/>
+        <result property="classTerm" column="class_term"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="courseName" column="course_name"/>
+        <result property="startTime" column="start_time"/>
+        <result property="graduateDate" column="graduate_date"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="selectClassDutyCandidates" resultMap="ClassDutyCandidateRecordMap">
+        select c.id as class_id,
+               c.class_term,
+               cp.campus_name,
+               crs.course_name,
+               c.start_time,
+               graduate_info.graduate_date,
+               d.teacher_id,
+               coalesce(u.real_name, u.nickname, u.username) as teacher_name,
+               d.remark
+        from edu_class c
+        inner join (
+            select distinct s.class_id
+            from edu_class_schedule s
+            where s.schedule_date = #{dutyDate}
+              and s.schedule_type in ('CLASS', 'SELF_STUDY')
+        ) active_class on active_class.class_id = c.id
+        left join (
+            select class_id, max(schedule_date) as graduate_date
+            from edu_class_schedule
+            where schedule_type = 'CLASS'
+            group by class_id
+        ) graduate_info on graduate_info.class_id = c.id
+        left join edu_campus cp on cp.id = c.campus_id
+        left join edu_course crs on crs.id = c.course_id
+        left join edu_duty_assignment d on d.duty_date = #{dutyDate}
+            and d.duty_type = 'CLASS_NIGHT_DUTY'
+            and d.class_id = c.id
+        left join sys_user u on u.id = d.teacher_id
+        order by c.start_time asc, c.id asc
+    </select>
+
+    <select id="selectGlobalDuty" resultMap="DutyAssignmentMap">
+        select d.id,
+               d.duty_date,
+               d.duty_type,
+               d.class_id,
+               d.start_time,
+               d.end_time,
+               d.teacher_id,
+               coalesce(u.real_name, u.nickname, u.username) as teacher_name,
+               d.remark,
+               d.created_at,
+               d.updated_at
+        from edu_duty_assignment d
+        left join sys_user u on u.id = d.teacher_id
+        where d.duty_date = #{dutyDate}
+          and d.duty_type = #{dutyType}
+          and d.class_id = 0
+        limit 1
+    </select>
+
+    <insert id="upsert">
+        insert into edu_duty_assignment (
+            duty_date, duty_type, class_id, start_time, end_time, teacher_id, remark, created_at, updated_at
+        ) values (
+            #{dutyDate}, #{dutyType}, #{classId}, #{startTime}, #{endTime}, #{teacherId}, #{remark}, #{createdAt}, #{updatedAt}
+        )
+        on duplicate key update
+            start_time = values(start_time),
+            end_time = values(end_time),
+            teacher_id = values(teacher_id),
+            remark = values(remark),
+            updated_at = values(updated_at)
+    </insert>
+</mapper>

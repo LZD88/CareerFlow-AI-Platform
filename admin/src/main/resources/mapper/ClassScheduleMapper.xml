@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.ClassScheduleMapper">
+
+    <resultMap id="ClassScheduleMap" type="cn.yq.modules.teaching.domain.entity.ClassScheduleEntity">
+        <id property="id" column="id"/>
+        <result property="classId" column="class_id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="courseDetailId" column="course_detail_id"/>
+        <result property="courseDayNum" column="course_day_num"/>
+        <result property="scheduleDate" column="schedule_date"/>
+        <result property="scheduleType" column="schedule_type"/>
+        <result property="courseContent" column="course_content"/>
+        <result property="stageName" column="stage_name"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="TeacherScheduleRecordMap" type="cn.yq.modules.teaching.domain.vo.res.TeacherScheduleRecordRes">
+        <result property="teacherId" column="teacher_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="scheduleDate" column="schedule_date"/>
+        <result property="classId" column="class_id"/>
+        <result property="classTerm" column="class_term"/>
+        <result property="stageName" column="stage_name"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        s.id, s.class_id, s.course_id, s.course_detail_id, s.course_day_num, s.schedule_date, s.schedule_type, s.course_content, s.stage_name, s.teacher_id,
+        coalesce(u.real_name, u.nickname, u.username) as teacher_name, s.created_at, s.updated_at
+    </sql>
+
+    <insert id="insertBatch">
+        insert into edu_class_schedule (class_id, course_id, course_detail_id, course_day_num, schedule_date, schedule_type, course_content, stage_name, teacher_id, created_at, updated_at)
+        values
+        <foreach collection="records" item="item" separator=",">
+            (#{item.classId}, #{item.courseId}, #{item.courseDetailId}, #{item.courseDayNum}, #{item.scheduleDate}, #{item.scheduleType}, #{item.courseContent}, #{item.stageName}, #{item.teacherId}, #{item.createdAt}, #{item.updatedAt})
+        </foreach>
+    </insert>
+
+    <select id="selectByClassId" resultMap="ClassScheduleMap">
+        select <include refid="BaseColumns"/>
+        from edu_class_schedule s
+        left join sys_user u on u.id = s.teacher_id
+        where s.class_id = #{classId}
+        order by s.schedule_date asc, s.id asc
+    </select>
+
+    <select id="selectByClassIdAndDateRange" resultMap="ClassScheduleMap">
+        select <include refid="BaseColumns"/>
+        from edu_class_schedule s
+        left join sys_user u on u.id = s.teacher_id
+        where s.class_id = #{classId}
+          and s.schedule_date &gt;= #{startDate}
+          and s.schedule_date &lt;= #{endDate}
+        order by s.schedule_date asc, s.id asc
+    </select>
+
+    <select id="selectByClassIds" resultMap="ClassScheduleMap">
+        select <include refid="BaseColumns"/>
+        from edu_class_schedule s
+        left join sys_user u on u.id = s.teacher_id
+        where s.class_id in
+        <foreach collection="classIds" item="classId" open="(" separator="," close=")">
+            #{classId}
+        </foreach>
+        order by s.class_id asc, s.schedule_date asc, s.id asc
+    </select>
+
+    <select id="selectAssignedTeacherSchedules" resultMap="ClassScheduleMap">
+        select <include refid="BaseColumns"/>
+        from edu_class_schedule s
+        left join sys_user u on u.id = s.teacher_id
+        where s.teacher_id is not null
+          and s.schedule_type = 'CLASS'
+        order by s.class_id asc, s.schedule_date asc, s.id asc
+    </select>
+
+    <select id="selectTeacherSchedulesByDateRange" resultMap="TeacherScheduleRecordMap">
+        select s.teacher_id,
+               coalesce(u.real_name, u.nickname, u.username) as teacher_name,
+               s.schedule_date,
+               s.class_id,
+               c.class_term,
+               s.stage_name
+        from edu_class_schedule s
+        left join sys_user u on u.id = s.teacher_id
+        left join edu_class c on c.id = s.class_id
+        where s.schedule_type = 'CLASS'
+          and s.teacher_id is not null
+          and s.schedule_date &gt;= #{startDate}
+          and s.schedule_date &lt;= #{endDate}
+          and s.teacher_id in
+        <foreach collection="teacherIds" item="teacherId" open="(" separator="," close=")">
+            #{teacherId}
+        </foreach>
+        order by s.teacher_id asc, s.schedule_date asc, s.class_id asc, s.id asc
+    </select>
+
+    <update id="updateTeacherByClassAndStage">
+        update edu_class_schedule
+        set teacher_id = #{teacherId},
+            updated_at = now()
+        where class_id = #{classId}
+          and stage_name = #{stageName}
+          and schedule_type = 'CLASS'
+    </update>
+
+    <update id="updateContentByClassAndDate">
+        update edu_class_schedule
+        set course_content = #{courseContent},
+            updated_at = now()
+        where class_id = #{classId}
+          and schedule_date = #{scheduleDate}
+          and schedule_type = 'CLASS'
+    </update>
+
+    <update id="updateTeacherByClassAndDate">
+        update edu_class_schedule
+        set teacher_id = #{teacherId},
+            updated_at = now()
+        where class_id = #{classId}
+          and schedule_date = #{scheduleDate}
+          and schedule_type = 'CLASS'
+    </update>
+
+    <delete id="deleteByClassId">
+        delete from edu_class_schedule where class_id = #{classId}
+    </delete>
+
+    <delete id="deleteByClassIdAndDateFrom">
+        delete from edu_class_schedule
+        where class_id = #{classId}
+          and schedule_date &gt;= #{startDate}
+    </delete>
+
+    <select id="countByClassId" resultType="int">
+        select count(1) from edu_class_schedule where class_id = #{classId}
+    </select>
+</mapper>

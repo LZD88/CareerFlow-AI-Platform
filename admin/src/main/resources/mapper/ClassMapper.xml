@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.ClassMapper">
+
+    <resultMap id="ClassMap" type="cn.yq.modules.teaching.domain.entity.ClassEntity">
+        <id property="id" column="id"/>
+        <result property="classTerm" column="class_term"/>
+        <result property="campusId" column="campus_id"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="headTeacherId" column="head_teacher_id"/>
+        <result property="headTeacherName" column="head_teacher_name"/>
+        <result property="classStatus" column="class_status"/>
+        <result property="startTime" column="start_time"/>
+        <result property="courseId" column="course_id"/>
+        <result property="courseName" column="course_name"/>
+        <result property="studentCount" column="student_count"/>
+        <result property="hasSchedule" column="has_schedule"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        c.id,
+        c.class_term,
+        c.campus_id,
+        cp.campus_name,
+        c.head_teacher_id,
+        ifnull(nullif(u.real_name, ''), ifnull(nullif(u.nickname, ''), u.username)) as head_teacher_name,
+        c.class_status,
+        c.start_time,
+        c.course_id,
+        crs.course_name,
+        c.student_count,
+        exists(select 1 from edu_class_schedule s where s.class_id = c.id) as has_schedule,
+        c.created_at,
+        c.updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into edu_class (class_term, campus_id, head_teacher_id, class_status, start_time, course_id, student_count, created_at, updated_at)
+        values (#{classTerm}, #{campusId}, #{headTeacherId}, #{classStatus}, #{startTime}, #{courseId}, #{studentCount}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateById">
+        update edu_class
+        set class_term = #{classTerm},
+            campus_id = #{campusId},
+            head_teacher_id = #{headTeacherId},
+            class_status = #{classStatus},
+            start_time = #{startTime},
+            course_id = #{courseId},
+            student_count = #{studentCount},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="ClassMap">
+        select <include refid="BaseColumns"/>
+        from edu_class c
+        left join edu_campus cp on cp.id = c.campus_id
+        left join sys_user u on u.id = c.head_teacher_id
+        left join edu_course crs on crs.id = c.course_id
+        where c.id = #{id}
+    </select>
+
+    <select id="selectPage" resultMap="ClassMap">
+        select <include refid="BaseColumns"/>
+        from edu_class c
+        left join edu_campus cp on cp.id = c.campus_id
+        left join sys_user u on u.id = c.head_teacher_id
+        left join edu_course crs on crs.id = c.course_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    cast(c.class_term as char) like concat('%', #{keyword}, '%')
+                    or ifnull(cp.campus_name, '') like concat('%', #{keyword}, '%')
+                    or ifnull(u.real_name, '') like concat('%', #{keyword}, '%')
+                    or ifnull(u.nickname, '') like concat('%', #{keyword}, '%')
+                    or ifnull(u.username, '') like concat('%', #{keyword}, '%')
+                    or ifnull(crs.course_name, '') like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="classStatus != null and classStatus != ''">
+                and c.class_status = #{classStatus}
+            </if>
+            <if test="campusId != null">
+                and c.campus_id = #{campusId}
+            </if>
+            <if test="headTeacherId != null">
+                and c.head_teacher_id = #{headTeacherId}
+            </if>
+            <if test="courseId != null">
+                and c.course_id = #{courseId}
+            </if>
+        </where>
+        order by c.id desc
+    </select>
+
+    <delete id="deleteById">
+        delete from edu_class where id = #{id}
+    </delete>
+</mapper>
