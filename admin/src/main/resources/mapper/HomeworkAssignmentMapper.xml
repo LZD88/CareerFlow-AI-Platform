@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.HomeworkAssignmentMapper">
+
+    <resultMap id="HomeworkAssignmentMap" type="cn.yq.modules.teaching.domain.entity.HomeworkAssignmentEntity">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="classId" column="class_id"/>
+        <result property="classTerm" column="class_term"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="courseId" column="course_id"/>
+        <result property="courseName" column="course_name"/>
+        <result property="courseDetailId" column="course_detail_id"/>
+        <result property="courseDayNum" column="course_day_num"/>
+        <result property="courseContentSnapshot" column="course_content_snapshot"/>
+        <result property="homeworkDate" column="homework_date"/>
+        <result property="scheduleType" column="schedule_type"/>
+        <result property="attachmentName" column="attachment_name"/>
+        <result property="attachmentUrl" column="attachment_url"/>
+        <result property="attachmentType" column="attachment_type"/>
+        <result property="answerAttachmentName" column="answer_attachment_name"/>
+        <result property="answerAttachmentUrl" column="answer_attachment_url"/>
+        <result property="answerAttachmentType" column="answer_attachment_type"/>
+        <result property="answerPublishStatus" column="answer_publish_status"/>
+        <result property="answerPublishTime" column="answer_publish_time"/>
+        <result property="answerPublishTeacherId" column="answer_publish_teacher_id"/>
+        <result property="answerPublishTeacherName" column="answer_publish_teacher_name"/>
+        <result property="publishTeacherId" column="publish_teacher_id"/>
+        <result property="publishTeacherName" column="publish_teacher_name"/>
+        <result property="publishDate" column="publish_date"/>
+        <result property="deadline" column="deadline"/>
+        <result property="status" column="status"/>
+        <result property="allowResubmit" column="allow_resubmit"/>
+        <result property="studentCountSnapshot" column="student_count_snapshot"/>
+        <result property="submittedCount" column="submitted_count"/>
+        <result property="deleted" column="deleted"/>
+        <result property="closeTime" column="close_time"/>
+        <result property="closeTeacherId" column="close_teacher_id"/>
+        <result property="closeTeacherName" column="close_teacher_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="AdminColumns">
+        a.id,
+        a.title,
+        a.description,
+        a.class_id,
+        c.class_term,
+        cp.campus_name,
+        a.course_id,
+        crs.course_name,
+        a.course_detail_id,
+        cd.day_num as course_day_num,
+        a.course_content_snapshot,
+        a.homework_date,
+        s.schedule_type,
+        a.attachment_name,
+        a.attachment_url,
+        a.attachment_type,
+        a.answer_attachment_name,
+        a.answer_attachment_url,
+        a.answer_attachment_type,
+        a.answer_publish_status,
+        a.answer_publish_time,
+        a.answer_publish_teacher_id,
+        coalesce(ans_u.real_name, ans_u.nickname, ans_u.username) as answer_publish_teacher_name,
+        a.publish_teacher_id,
+        coalesce(pub_u.real_name, pub_u.nickname, pub_u.username) as publish_teacher_name,
+        a.publish_date,
+        a.deadline,
+        a.status,
+        a.allow_resubmit,
+        a.student_count_snapshot,
+        ifnull(sub.submitted_count, 0) as submitted_count,
+        a.deleted,
+        a.close_time,
+        a.close_teacher_id,
+        coalesce(close_u.real_name, close_u.nickname, close_u.username) as close_teacher_name,
+        a.create_time,
+        a.update_time
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into homework_assignment (
+            title, description, class_id, homework_date, course_id, course_detail_id, course_content_snapshot,
+            attachment_name, attachment_url, attachment_type,
+            answer_attachment_name, answer_attachment_url, answer_attachment_type,
+            answer_publish_status, answer_publish_time, answer_publish_teacher_id,
+            publish_teacher_id, publish_date, deadline, status, allow_resubmit,
+            student_count_snapshot, deleted, close_time, close_teacher_id, create_time, update_time
+        ) values (
+            #{title}, #{description}, #{classId}, #{homeworkDate}, #{courseId}, #{courseDetailId}, #{courseContentSnapshot},
+            #{attachmentName}, #{attachmentUrl}, #{attachmentType},
+            #{answerAttachmentName}, #{answerAttachmentUrl}, #{answerAttachmentType},
+            #{answerPublishStatus}, #{answerPublishTime}, #{answerPublishTeacherId},
+            #{publishTeacherId}, #{publishDate}, #{deadline}, #{status}, #{allowResubmit},
+            #{studentCountSnapshot}, #{deleted}, #{closeTime}, #{closeTeacherId}, #{createTime}, #{updateTime}
+        )
+    </insert>
+
+    <update id="updateById">
+        update homework_assignment
+        set title = #{title},
+            description = #{description},
+            class_id = #{classId},
+            homework_date = #{homeworkDate},
+            course_id = #{courseId},
+            course_detail_id = #{courseDetailId},
+            course_content_snapshot = #{courseContentSnapshot},
+            attachment_name = #{attachmentName},
+            attachment_url = #{attachmentUrl},
+            attachment_type = #{attachmentType},
+            answer_attachment_name = #{answerAttachmentName},
+            answer_attachment_url = #{answerAttachmentUrl},
+            answer_attachment_type = #{answerAttachmentType},
+            answer_publish_status = #{answerPublishStatus},
+            answer_publish_time = #{answerPublishTime},
+            answer_publish_teacher_id = #{answerPublishTeacherId},
+            publish_teacher_id = #{publishTeacherId},
+            publish_date = #{publishDate},
+            deadline = #{deadline},
+            status = #{status},
+            allow_resubmit = #{allowResubmit},
+            student_count_snapshot = #{studentCountSnapshot},
+            deleted = #{deleted},
+            close_time = #{closeTime},
+            close_teacher_id = #{closeTeacherId},
+            update_time = #{updateTime}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="HomeworkAssignmentMap">
+        select <include refid="AdminColumns"/>
+        from homework_assignment a
+        left join edu_class c on c.id = a.class_id
+        left join edu_campus cp on cp.id = c.campus_id
+        left join edu_course crs on crs.id = a.course_id
+        left join edu_course_detail cd on cd.id = a.course_detail_id
+        left join edu_class_schedule s on s.class_id = a.class_id and s.schedule_date = a.homework_date
+        left join sys_user pub_u on pub_u.id = a.publish_teacher_id
+        left join sys_user ans_u on ans_u.id = a.answer_publish_teacher_id
+        left join sys_user close_u on close_u.id = a.close_teacher_id
+        left join (
+            select assignment_id, count(1) as submitted_count
+            from homework_submission
+            group by assignment_id
+        ) sub on sub.assignment_id = a.id
+        where a.id = #{id}
+          and a.deleted = 0
+    </select>
+
+    <select id="selectAdminPage" resultMap="HomeworkAssignmentMap">
+        select <include refid="AdminColumns"/>
+        from homework_assignment a
+        left join edu_class c on c.id = a.class_id
+        left join edu_campus cp on cp.id = c.campus_id
+        left join edu_course crs on crs.id = a.course_id
+        left join edu_course_detail cd on cd.id = a.course_detail_id
+        left join edu_class_schedule s on s.class_id = a.class_id and s.schedule_date = a.homework_date
+        left join sys_user pub_u on pub_u.id = a.publish_teacher_id
+        left join sys_user ans_u on ans_u.id = a.answer_publish_teacher_id
+        left join sys_user close_u on close_u.id = a.close_teacher_id
+        left join (
+            select assignment_id, count(1) as submitted_count
+            from homework_submission
+            group by assignment_id
+        ) sub on sub.assignment_id = a.id
+        <where>
+            a.deleted = 0
+            <if test="title != null and title != ''">
+                and a.title like concat('%', #{title}, '%')
+            </if>
+            <if test="classId != null">
+                and a.class_id = #{classId}
+            </if>
+            <if test="status != null and status != ''">
+                and a.status = #{status}
+            </if>
+        </where>
+        order by a.publish_date desc, a.id desc
+    </select>
+
+    <update id="softDeleteById">
+        update homework_assignment
+        set deleted = 1,
+            update_time = now()
+        where id = #{id}
+    </update>
+
+    <select id="selectStudentList" resultType="cn.yq.modules.studentportal.domain.vo.res.StudentHomeworkItemRes">
+        select a.id,
+               a.title,
+               a.description,
+               crs.course_name as courseName,
+               a.course_content_snapshot as courseContentSnapshot,
+               a.homework_date as homeworkDate,
+               a.publish_date as publishDate,
+               a.deadline,
+               a.status,
+               a.allow_resubmit as allowResubmit,
+               a.attachment_name as attachmentName,
+               a.attachment_url as attachmentDownloadUrl,
+               a.answer_publish_status as answerPublishStatus,
+               case when a.answer_publish_status = 'PUBLISHED' then a.answer_attachment_name else null end as answerAttachmentName,
+               case when a.answer_publish_status = 'PUBLISHED' then a.answer_attachment_url else null end as answerAttachmentDownloadUrl,
+               sub.status as submissionStatus,
+               sub.submit_content as submitContent,
+               sub.attachment_name as submissionAttachmentName,
+               sub.attachment_url as submissionAttachmentDownloadUrl,
+               sub.submit_time as submitTime,
+               sub.score,
+               sub.teacher_comment as teacherComment,
+               sub.version
+        from homework_assignment a
+        left join edu_course crs on crs.id = a.course_id
+        left join homework_submission sub on sub.assignment_id = a.id and sub.student_no = #{studentNo}
+        where a.deleted = 0
+          and a.class_id = #{classId}
+        order by a.homework_date desc, a.publish_date desc, a.id desc
+    </select>
+
+    <select id="selectStudentDetail" resultType="cn.yq.modules.studentportal.domain.vo.res.StudentHomeworkDetailRes">
+        select a.id,
+               a.title,
+               a.description,
+               a.class_id as classId,
+               a.course_id as courseId,
+               a.course_detail_id as courseDetailId,
+               crs.course_name as courseName,
+               cd.day_num as courseDayNum,
+               a.course_content_snapshot as courseContentSnapshot,
+               a.homework_date as homeworkDate,
+               a.publish_date as publishDate,
+               a.deadline,
+               a.status,
+               a.allow_resubmit as allowResubmit,
+               a.attachment_name as attachmentName,
+               a.attachment_url as attachmentUrl,
+               a.attachment_url as attachmentDownloadUrl,
+               a.attachment_type as attachmentType,
+               a.answer_publish_status as answerPublishStatus,
+               a.answer_publish_time as answerPublishTime,
+               case when a.answer_publish_status = 'PUBLISHED' then a.answer_attachment_name else null end as answerAttachmentName,
+               case when a.answer_publish_status = 'PUBLISHED' then a.answer_attachment_url else null end as answerAttachmentUrl,
+               case when a.answer_publish_status = 'PUBLISHED' then a.answer_attachment_url else null end as answerAttachmentDownloadUrl,
+               case when a.answer_publish_status = 'PUBLISHED' then a.answer_attachment_type else null end as answerAttachmentType,
+               sub.status as submissionStatus,
+               sub.submit_content as submitContent,
+               sub.attachment_name as submissionAttachmentName,
+               sub.attachment_url as submissionAttachmentUrl,
+               sub.attachment_url as submissionAttachmentDownloadUrl,
+               sub.attachment_type as submissionAttachmentType,
+               sub.submit_time as submitTime,
+               sub.score,
+               sub.teacher_comment as teacherComment,
+               sub.version
+        from homework_assignment a
+        left join edu_course crs on crs.id = a.course_id
+        left join edu_course_detail cd on cd.id = a.course_detail_id
+        left join homework_submission sub on sub.assignment_id = a.id and sub.student_no = #{studentNo}
+        where a.deleted = 0
+          and a.id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.HomeworkSubmissionMapper">
+
+    <resultMap id="HomeworkSubmissionMap" type="cn.yq.modules.teaching.domain.entity.HomeworkSubmissionEntity">
+        <id property="id" column="id"/>
+        <result property="assignmentId" column="assignment_id"/>
+        <result property="studentNo" column="student_no"/>
+        <result property="studentNameSnapshot" column="student_name_snapshot"/>
+        <result property="submitContent" column="submit_content"/>
+        <result property="attachmentName" column="attachment_name"/>
+        <result property="attachmentUrl" column="attachment_url"/>
+        <result property="attachmentType" column="attachment_type"/>
+        <result property="submitTime" column="submit_time"/>
+        <result property="status" column="status"/>
+        <result property="score" column="score"/>
+        <result property="teacherComment" column="teacher_comment"/>
+        <result property="reviewTeacherId" column="review_teacher_id"/>
+        <result property="reviewTime" column="review_time"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectByAssignmentIdAndStudentNo" resultMap="HomeworkSubmissionMap">
+        select id,
+               assignment_id,
+               student_no,
+               student_name_snapshot,
+               submit_content,
+               attachment_name,
+               attachment_url,
+               attachment_type,
+               submit_time,
+               status,
+               score,
+               teacher_comment,
+               review_teacher_id,
+               review_time,
+               version,
+               create_time,
+               update_time
+        from homework_submission
+        where assignment_id = #{assignmentId}
+          and student_no = #{studentNo}
+    </select>
+
+    <select id="selectById" resultMap="HomeworkSubmissionMap">
+        select id,
+               assignment_id,
+               student_no,
+               student_name_snapshot,
+               submit_content,
+               attachment_name,
+               attachment_url,
+               attachment_type,
+               submit_time,
+               status,
+               score,
+               teacher_comment,
+               review_teacher_id,
+               review_time,
+               version,
+               create_time,
+               update_time
+        from homework_submission
+        where id = #{id}
+    </select>
+
+    <select id="selectAdminPage" resultType="cn.yq.modules.teaching.domain.vo.res.HomeworkSubmissionAdminItemRes">
+        select sub.id as submissionId,
+               stu.id as studentId,
+               stu.student_code as studentCode,
+               stu.student_name as studentName,
+               stu.phone as phone,
+               stu.graduation_session as graduationSession,
+               stu.school as school,
+               sub.status as status,
+               sub.submit_content as submitContent,
+               sub.attachment_name as attachmentName,
+               sub.attachment_url as attachmentUrl,
+               sub.attachment_url as attachmentDownloadUrl,
+               sub.attachment_type as attachmentType,
+               sub.submit_time as submitTime,
+               sub.score,
+               sub.teacher_comment as teacherComment,
+               sub.review_teacher_id as reviewTeacherId,
+               coalesce(rev_u.real_name, rev_u.nickname, rev_u.username) as reviewTeacherName,
+               sub.review_time as reviewTime,
+               sub.version as version
+        from edu_student stu
+        inner join homework_assignment a on a.class_id = stu.class_id and a.id = #{assignmentId} and a.deleted = 0
+        left join homework_submission sub on sub.assignment_id = a.id and sub.student_no = stu.student_code
+        left join sys_user rev_u on rev_u.id = sub.review_teacher_id
+        <where>
+            1 = 1
+            <if test="studentCode != null and studentCode != ''">
+                and stu.student_code like concat('%', #{studentCode}, '%')
+            </if>
+            <if test="studentName != null and studentName != ''">
+                and stu.student_name like concat('%', #{studentName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                <choose>
+                    <when test="status == 'UNSUBMITTED'">
+                        and sub.id is null
+                    </when>
+                    <otherwise>
+                        and sub.status = #{status}
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+        order by
+            case when sub.submit_time is null then 1 else 0 end,
+            sub.submit_time desc,
+            stu.id asc
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into homework_submission (
+            assignment_id,
+            student_no,
+            student_name_snapshot,
+            submit_content,
+            attachment_name,
+            attachment_url,
+            attachment_type,
+            submit_time,
+            status,
+            score,
+            teacher_comment,
+            review_teacher_id,
+            review_time,
+            version,
+            create_time,
+            update_time
+        ) values (
+            #{assignmentId},
+            #{studentNo},
+            #{studentNameSnapshot},
+            #{submitContent},
+            #{attachmentName},
+            #{attachmentUrl},
+            #{attachmentType},
+            #{submitTime},
+            #{status},
+            #{score},
+            #{teacherComment},
+            #{reviewTeacherId},
+            #{reviewTime},
+            #{version},
+            #{createTime},
+            #{updateTime}
+        )
+    </insert>
+
+    <update id="updateById">
+        update homework_submission
+        set student_name_snapshot = #{studentNameSnapshot},
+            submit_content = #{submitContent},
+            attachment_name = #{attachmentName},
+            attachment_url = #{attachmentUrl},
+            attachment_type = #{attachmentType},
+            submit_time = #{submitTime},
+            status = #{status},
+            score = #{score},
+            teacher_comment = #{teacherComment},
+            review_teacher_id = #{reviewTeacherId},
+            review_time = #{reviewTime},
+            version = #{version},
+            update_time = #{updateTime}
+        where id = #{id}
+    </update>
+</mapper>

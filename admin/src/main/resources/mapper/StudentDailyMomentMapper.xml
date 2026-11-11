@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.teaching.mapper.StudentDailyMomentMapper">
+
+    <resultMap id="StudentDailyMomentMap" type="cn.yq.modules.teaching.domain.entity.StudentDailyMomentEntity">
+        <id property="id" column="id"/>
+        <result property="studentNo" column="student_no"/>
+        <result property="title" column="title"/>
+        <result property="contentText" column="content_text"/>
+        <result property="fileUrl" column="file_url"/>
+        <result property="recordTime" column="record_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="StudentDailyMomentAdminMap" type="cn.yq.modules.teaching.domain.entity.StudentDailyMomentAdminEntity">
+        <id property="id" column="id"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="studentName" column="student_name"/>
+        <result property="classId" column="class_id"/>
+        <result property="classTerm" column="class_term"/>
+        <result property="campusName" column="campus_name"/>
+        <result property="title" column="title"/>
+        <result property="contentText" column="content_text"/>
+        <result property="fileUrl" column="file_url"/>
+        <result property="recordTime" column="record_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into edu_student_daily_moment (
+            student_no,
+            title,
+            content_text,
+            file_url,
+            record_time,
+            create_time,
+            update_time
+        ) values (
+            #{studentNo},
+            #{title},
+            #{contentText},
+            #{fileUrl},
+            #{recordTime},
+            #{createTime},
+            #{updateTime}
+        )
+    </insert>
+
+    <select id="selectByStudentNo" resultMap="StudentDailyMomentMap">
+        select id,
+               student_no,
+               title,
+               content_text,
+               file_url,
+               record_time,
+               create_time,
+               update_time
+        from edu_student_daily_moment
+        where student_no = #{studentNo}
+        order by record_time desc, create_time desc, id desc
+    </select>
+
+    <select id="selectAdminPage" resultMap="StudentDailyMomentAdminMap">
+        select m.id,
+               s.student_code,
+               s.student_name,
+               s.class_id,
+               c.class_term,
+               cp.campus_name,
+               m.title,
+               m.content_text,
+               m.file_url,
+               m.record_time,
+               m.create_time
+        from edu_student_daily_moment m
+        left join edu_student s on s.student_code = m.student_no
+        left join edu_class c on c.id = s.class_id
+        left join edu_campus cp on cp.id = c.campus_id
+        <where>
+            <if test="studentCode != null and studentCode != ''">
+                and ifnull(s.student_code, '') like concat('%', #{studentCode}, '%')
+            </if>
+            <if test="studentName != null and studentName != ''">
+                and ifnull(s.student_name, '') like concat('%', #{studentName}, '%')
+            </if>
+            <if test="title != null and title != ''">
+                and ifnull(m.title, '') like concat('%', #{title}, '%')
+            </if>
+        </where>
+        order by m.record_time desc, m.create_time desc, m.id desc
+    </select>
+</mapper>
