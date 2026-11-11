@@ -1,0 +1,1 @@
+"""Image generation business services."""

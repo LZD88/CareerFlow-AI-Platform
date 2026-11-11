@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.mediaagent.mapper.MediaProjectMapper">
+
+    <resultMap id="MediaProjectMap" type="cn.yq.modules.mediaagent.domain.entity.MediaProjectEntity">
+        <id property="id" column="id"/>
+        <result property="theme" column="theme"/>
+        <result property="topicJson" column="topic_json"/>
+        <result property="topicTitle" column="topic_title"/>
+        <result property="style" column="style"/>
+        <result property="status" column="status"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, theme, topic_json, topic_title, style, status, created_by, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into media_project (
+            theme, topic_json, topic_title, style, status, created_by, created_at, updated_at
+        ) values (
+            #{theme}, #{topicJson}, #{topicTitle}, #{style}, #{status}, #{createdBy}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectById" resultMap="MediaProjectMap">
+        select <include refid="BaseColumns"/> from media_project where id = #{id}
+    </select>
+</mapper>
