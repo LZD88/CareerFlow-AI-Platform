@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.knowledge.mapper.KnowledgeDocumentMapper">
+
+    <resultMap id="KnowledgeDocumentMap" type="cn.yq.modules.knowledge.domain.entity.KnowledgeDocumentEntity">
+        <id property="id" column="id"/>
+        <result property="documentCode" column="document_code"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourcePath" column="source_path"/>
+        <result property="courseId" column="course_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="studyMode" column="study_mode"/>
+        <result property="version" column="version"/>
+        <result property="permissionScope" column="permission_scope"/>
+        <result property="status" column="status"/>
+        <result property="chunkCount" column="chunk_count"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="indexedAt" column="indexed_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, document_code, title, content, source_type, source_path, course_id, class_id, study_mode,
+        version, permission_scope, status, chunk_count, error_message, indexed_at, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into knowledge_document (
+            document_code, title, content, source_type, source_path, course_id, class_id,
+            study_mode, version, permission_scope, status, chunk_count, error_message, indexed_at, created_at, updated_at
+        ) values (
+            #{documentCode}, #{title}, #{content}, #{sourceType}, #{sourcePath}, #{courseId}, #{classId},
+            #{studyMode}, #{version}, #{permissionScope}, #{status}, #{chunkCount}, #{errorMessage}, #{indexedAt}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateById">
+        update knowledge_document
+        set title = #{title},
+            content = #{content},
+            source_type = #{sourceType},
+            source_path = #{sourcePath},
+            course_id = #{courseId},
+            class_id = #{classId},
+            study_mode = #{studyMode},
+            version = #{version},
+            permission_scope = #{permissionScope},
+            status = #{status},
+            chunk_count = #{chunkCount},
+            error_message = #{errorMessage},
+            indexed_at = #{indexedAt},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="KnowledgeDocumentMap">
+        select <include refid="BaseColumns"/> from knowledge_document where id = #{id}
+    </select>
+
+    <select id="selectPage" resultMap="KnowledgeDocumentMap">
+        select <include refid="BaseColumns"/>
+        from knowledge_document
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    title like concat('%', #{keyword}, '%')
+                    or document_code like concat('%', #{keyword}, '%')
+                    or source_path like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+            <if test="courseId != null">
+                and course_id = #{courseId}
+            </if>
+            <if test="studyMode != null and studyMode != ''">
+                and study_mode = #{studyMode}
+            </if>
+            <if test="sourceType != null and sourceType != ''">
+                and source_type = #{sourceType}
+            </if>
+            <if test="permissionScope != null and permissionScope != ''">
+                and permission_scope = #{permissionScope}
+            </if>
+        </where>
+        order by id desc
+    </select>
+</mapper>
