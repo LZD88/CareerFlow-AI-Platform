@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.studentportal.mapper.ChatSessionMapper">
+
+    <resultMap id="ChatSessionMap" type="cn.yq.modules.studentportal.domain.entity.aichat.ChatSessionEntity">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="title" column="title"/>
+        <result property="status" column="status"/>
+        <result property="messageCount" column="message_count"/>
+        <result property="lastMessageAt" column="last_message_at"/>
+        <result property="summary" column="summary"/>
+        <result property="summaryTokenCount" column="summary_token_count"/>
+        <result property="compressedUntilMessageId" column="compressed_until_message_id"/>
+        <result property="archiveStatus" column="archive_status"/>
+        <result property="archiveId" column="archive_id"/>
+        <result property="expireAt" column="expire_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id,
+        student_id,
+        student_code,
+        title,
+        status,
+        message_count,
+        last_message_at,
+        summary,
+        summary_token_count,
+        compressed_until_message_id,
+        archive_status,
+        archive_id,
+        expire_at,
+        created_at,
+        updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into ai_chat_session (
+            student_id, student_code, title, status, message_count, last_message_at, summary,
+            summary_token_count, compressed_until_message_id, archive_status, archive_id,
+            expire_at, created_at, updated_at
+        ) values (
+            #{studentId}, #{studentCode}, #{title}, #{status}, #{messageCount}, #{lastMessageAt}, #{summary},
+            #{summaryTokenCount}, #{compressedUntilMessageId}, #{archiveStatus}, #{archiveId},
+            #{expireAt}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectById" resultMap="ChatSessionMap">
+        select <include refid="BaseColumns"/>
+        from ai_chat_session
+        where id = #{id}
+    </select>
+
+    <select id="selectByIdAndStudentId" resultMap="ChatSessionMap">
+        select <include refid="BaseColumns"/>
+        from ai_chat_session
+        where id = #{id}
+          and student_id = #{studentId}
+          and status != 'DELETED'
+    </select>
+
+    <select id="selectByStudentId" resultMap="ChatSessionMap">
+        select <include refid="BaseColumns"/>
+        from ai_chat_session
+        where student_id = #{studentId}
+          and status != 'DELETED'
+        order by last_message_at desc, id desc
+    </select>
+
+    <update id="updateTitleIfBlank">
+        update ai_chat_session
+        set title = #{title},
+            updated_at = #{updatedAt}
+        where id = #{id}
+          and student_id = #{studentId}
+          and (title is null or title = '' or title = '新对话')
+    </update>
+
+    <update id="updateStats">
+        update ai_chat_session
+        set message_count = (
+                select count(1)
+                from ai_chat_message
+                where session_id = #{id}
+                  and student_id = #{studentId}
+            ),
+            last_message_at = #{lastMessageAt},
+            updated_at = #{updatedAt}
+        where id = #{id}
+          and student_id = #{studentId}
+    </update>
+
+    <update id="updateSummary">
+        update ai_chat_session
+        set summary = #{summary},
+            summary_token_count = #{summaryTokenCount},
+            compressed_until_message_id = #{compressedUntilMessageId},
+            updated_at = #{updatedAt}
+        where id = #{id}
+          and student_id = #{studentId}
+    </update>
+
+    <update id="markDeleted">
+        update ai_chat_session
+        set status = 'DELETED',
+            updated_at = #{updatedAt}
+        where id = #{id}
+          and student_id = #{studentId}
+    </update>
+</mapper>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.studentportal.mapper.ChatMessageMapper">
+
+    <resultMap id="ChatMessageMap" type="cn.yq.modules.studentportal.domain.entity.aichat.ChatMessageEntity">
+        <id property="id" column="id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="role" column="role"/>
+        <result property="content" column="content"/>
+        <result property="contentType" column="content_type"/>
+        <result property="tokenCount" column="token_count"/>
+        <result property="retrievalId" column="retrieval_id"/>
+        <result property="sourceRefsJson" column="source_refs_json"/>
+        <result property="modelName" column="model_name"/>
+        <result property="finishReason" column="finish_reason"/>
+        <result property="compressed" column="compressed"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id,
+        session_id,
+        student_id,
+        role,
+        content,
+        content_type,
+        token_count,
+        retrieval_id,
+        source_refs_json,
+        model_name,
+        finish_reason,
+        compressed,
+        created_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into ai_chat_message (
+            session_id, student_id, role, content, content_type, token_count, retrieval_id,
+            source_refs_json, model_name, finish_reason, compressed, created_at
+        ) values (
+            #{sessionId}, #{studentId}, #{role}, #{content}, #{contentType}, #{tokenCount}, #{retrievalId},
+            #{sourceRefsJson}, #{modelName}, #{finishReason}, #{compressed}, #{createdAt}
+        )
+    </insert>
+
+    <select id="selectBySessionIdAndStudentId" resultMap="ChatMessageMap">
+        select <include refid="BaseColumns"/>
+        from ai_chat_message
+        where session_id = #{sessionId}
+          and student_id = #{studentId}
+        order by id asc
+    </select>
+
+    <select id="selectUncompressedBySessionIdAndStudentId" resultMap="ChatMessageMap">
+        select <include refid="BaseColumns"/>
+        from ai_chat_message
+        where session_id = #{sessionId}
+          and student_id = #{studentId}
+          and compressed = 0
+        order by id asc
+    </select>
+
+    <update id="markCompressedUntil">
+        update ai_chat_message
+        set compressed = 1
+        where session_id = #{sessionId}
+          and student_id = #{studentId}
+          and id &lt;= #{messageId}
+    </update>
+</mapper>
