@@ -1,0 +1,2 @@
+ALTER TABLE sale_product
+    ADD COLUMN study_mode VARCHAR(32) NOT NULL DEFAULT 'ONLINE' COMMENT '学习方式：ONLINE/OFFLINE' AFTER product_name;

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.sales.mapper.OrderMapper">
+
+    <resultMap id="OrderMap" type="cn.yq.modules.sales.domain.entity.OrderEntity">
+        <id property="id" column="id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="studentName" column="student_name"/>
+        <result property="phone" column="phone"/>
+        <result property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="productStudyMode" column="product_study_mode"/>
+        <result property="classId" column="class_id"/>
+        <result property="classTerm" column="class_term"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="productAmount" column="product_amount"/>
+        <result property="discountAmount" column="discount_amount"/>
+        <result property="receivableAmount" column="receivable_amount"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="studentId" column="student_id"/>
+        <result property="fulfillmentStatus" column="fulfillment_status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        o.id, o.order_no, o.student_name, o.phone, o.product_id, p.product_name, p.study_mode as product_study_mode, o.class_id, c.class_term, o.student_code, o.product_amount, o.discount_amount,
+        o.receivable_amount, o.paid_amount, o.order_status, o.created_at, o.updated_at,
+        s.id as student_id, <include refid="FulfillmentStatus"/> as fulfillment_status
+    </sql>
+
+    <sql id="FulfillmentStatus">
+        case
+            when o.order_status = 'CLOSED' then 'CLOSED'
+            when o.order_status != 'PAID' then 'PENDING_PAYMENT'
+            when s.id is not null then 'ENROLLED'
+            else 'PENDING_ENROLLMENT'
+        end
+    </sql>
+
+    <select id="lockById" resultType="java.lang.Long">
+        select id from sale_order where id = #{id} for update
+    </select>
+
+    <select id="lockByOrderNo" resultType="java.lang.Long">
+        select id from sale_order where order_no = #{orderNo} for update
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sale_order (
+            order_no, student_name, phone, product_id, class_id, student_code, product_amount, discount_amount,
+            receivable_amount, paid_amount, order_status, created_at, updated_at
+        ) values (
+            #{orderNo}, #{studentName}, #{phone}, #{productId}, #{classId}, #{studentCode}, #{productAmount}, #{discountAmount},
+            #{receivableAmount}, #{paidAmount}, #{orderStatus}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateById">
+        update sale_order
+        set student_name = #{studentName},
+            phone = #{phone},
+            product_id = #{productId},
+            class_id = #{classId},
+            student_code = #{studentCode},
+            product_amount = #{productAmount},
+            discount_amount = #{discountAmount},
+            receivable_amount = #{receivableAmount},
+            paid_amount = #{paidAmount},
+            order_status = #{orderStatus},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="OrderMap">
+        select <include refid="BaseColumns"/>
+        from sale_order o
+        left join sale_product p on p.id = o.product_id
+        left join edu_class c on c.id = o.class_id
+        left join edu_student s on s.student_code = o.student_code and s.product_id = o.product_id
+            and s.phone = o.phone and (p.study_mode = 'ONLINE' or s.class_id = o.class_id)
+        where o.id = #{id}
+    </select>
+
+    <select id="selectByOrderNo" resultMap="OrderMap">
+        select <include refid="BaseColumns"/>
+        from sale_order o
+        left join sale_product p on p.id = o.product_id
+        left join edu_class c on c.id = o.class_id
+        left join edu_student s on s.student_code = o.student_code and s.product_id = o.product_id
+            and s.phone = o.phone and (p.study_mode = 'ONLINE' or s.class_id = o.class_id)
+        where o.order_no = #{orderNo}
+        limit 1
+    </select>
+
+    <select id="selectByStudentCode" resultMap="OrderMap">
+        select <include refid="BaseColumns"/>
+        from sale_order o
+        left join sale_product p on p.id = o.product_id
+        left join edu_class c on c.id = o.class_id
+        left join edu_student s on s.student_code = o.student_code and s.product_id = o.product_id
+            and s.phone = o.phone and (p.study_mode = 'ONLINE' or s.class_id = o.class_id)
+        where o.student_code = #{studentCode}
+        limit 1
+    </select>
+
+    <select id="selectLatestByStudentCode" resultMap="OrderMap">
+        select <include refid="BaseColumns"/>
+        from sale_order o
+        left join sale_product p on p.id = o.product_id
+        left join edu_class c on c.id = o.class_id
+        left join edu_student s on s.student_code = o.student_code and s.product_id = o.product_id
+            and s.phone = o.phone and (p.study_mode = 'ONLINE' or s.class_id = o.class_id)
+        where o.student_code = #{studentCode}
+        order by o.id desc
+        limit 1
+    </select>
+
+    <select id="selectPage" resultMap="OrderMap">
+        select <include refid="BaseColumns"/>
+        from sale_order o
+        left join sale_product p on p.id = o.product_id
+        left join edu_class c on c.id = o.class_id
+        left join edu_student s on s.student_code = o.student_code and s.product_id = o.product_id
+            and s.phone = o.phone and (p.study_mode = 'ONLINE' or s.class_id = o.class_id)
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    o.order_no like concat('%', #{keyword}, '%')
+                    or o.student_name like concat('%', #{keyword}, '%')
+                    or o.phone like concat('%', #{keyword}, '%')
+                    or o.student_code like concat('%', #{keyword}, '%')
+                    or ifnull(p.product_name, '') like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="orderStatus != null and orderStatus != ''">
+                and o.order_status = #{orderStatus}
+            </if>
+            <if test="fulfillmentStatus != null and fulfillmentStatus != ''">
+                and (<include refid="FulfillmentStatus"/>) = #{fulfillmentStatus}
+            </if>
+        </where>
+        order by o.id desc
+    </select>
+
+    <delete id="deleteById">
+        delete from sale_order where id = #{id}
+    </delete>
+</mapper>
