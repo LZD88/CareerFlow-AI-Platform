@@ -1,0 +1,149 @@
+[
+    {
+      "table": "edu_campus",
+      "business_name": "校区表",
+      "desc": "存储校区名称、负责人、地址、状态等信息。用于按校区统计班级、学员、订单和支付数据。",
+      "keywords": ["校区", "门店", "地址", "负责人"],
+      "relations": [
+        "edu_class.campus_id -> edu_campus.id"
+      ]
+    },
+    {
+      "table": "edu_course",
+      "business_name": "课程表",
+      "desc": "存储课程名称、课程天数、课程状态等基础信息。用于按课程统计班级、学员、作业和销售情况。",
+      "keywords": ["课程", "课程天数", "教学内容"],
+      "relations": [
+        "edu_class.course_id -> edu_course.id",
+        "edu_course_detail.course_id -> edu_course.id"
+      ]
+    },
+    {
+      "table": "edu_course_detail",
+      "business_name": "课程详情表",
+      "desc": "存储课程每天的内容、所属阶段、第几天课。用于分析课程进度、阶段内容和作业对应课程内容。",
+      "keywords": ["课程详情", "阶段", "第几天课", "课程内容"],
+      "relations": [
+        "edu_course_detail.course_id -> edu_course.id",
+        "edu_class_schedule.course_detail_id -> edu_course_detail.id",
+        "homework_assignment.course_detail_id -> edu_course_detail.id"
+      ]
+    },
+    {
+      "table": "edu_class",
+      "business_name": "班级表",
+      "desc": "存储班级期数、校区、班主任、班级状态、开班时间、课程和班级人数。用于班级维度统计。",
+      "keywords": ["班级", "期数", "开班", "班主任", "班级人数"],
+      "relations": [
+        "edu_class.campus_id -> edu_campus.id",
+        "edu_class.course_id -> edu_course.id",
+        "edu_student.class_id -> edu_class.id",
+        "sale_order.class_id -> edu_class.id",
+        "homework_assignment.class_id -> edu_class.id"
+      ],
+      "common_metrics": ["班级数", "在读班级数", "班级人数"]
+    },
+    {
+      "table": "edu_class_schedule",
+      "business_name": "班级课表表",
+      "desc": "存储班级每天的排课日期、排课类型、课程内容、课程第几天和授课老师。用于排课、上课进度和老师课表分析。",
+      "keywords": ["课表", "排课", "上课日期", "授课老师", "课程进度"],
+      "relations": [
+        "edu_class_schedule.class_id -> edu_class.id",
+        "edu_class_schedule.course_id -> edu_course.id",
+        "edu_class_schedule.course_detail_id -> edu_course_detail.id"
+      ]
+    },
+    {
+      "table": "sale_product",
+      "business_name": "产品表",
+      "desc": "存储销售产品编号、名称、学习方式和价格。用于按产品统计订单、学员和销售数据。",
+      "keywords": ["产品", "商品", "价格", "线上", "线下"],
+      "relations": [
+        "sale_order.product_id -> sale_product.id",
+        "edu_student.product_id -> sale_product.id"
+      ]
+    },
+    {
+      "table": "sale_order",
+      "business_name": "订单表",
+      "desc": "存储销售订单、学员快照、产品、班级、应收金额、已付金额和订单状态。用于订单、报名、销售金额分析。",
+      "keywords": ["订单", "报名", "销售", "应收", "已付", "成交"],
+      "relations": [
+        "sale_order.product_id -> sale_product.id",
+        "sale_order.class_id -> edu_class.id",
+        "sale_order.student_code -> edu_student.student_code",
+        "sale_payment_order.order_no -> sale_order.order_no"
+      ],
+      "common_metrics": ["订单数", "应收金额", "已付金额"]
+    },
+    {
+      "table": "sale_payment_order",
+      "business_name": "支付订单表",
+      "desc": "存储支付订单号、业务订单号、支付金额、支付渠道、支付状态。用于支付金额、支付成功率、支付订单分析。",
+      "keywords": ["支付订单", "支付", "收款", "支付状态", "支付金额"],
+      "relations": [
+        "sale_payment_order.order_no -> sale_order.order_no",
+        "sale_payment_order.student_code -> edu_student.student_code",
+        "sale_payment_channel_order.payment_order_no -> sale_payment_order.payment_order_no"
+      ],
+      "common_metrics": ["支付金额", "支付订单数", "支付成功订单数"]
+    },
+    {
+      "table": "sale_payment_channel_order",
+      "business_name": "渠道支付回调记录表",
+      "desc": "存储第三方支付渠道回调、渠道流水、渠道状态、支付成功时间和失败原因。用于排查支付渠道问题和渠道支付统计。",
+      "keywords": ["渠道支付", "回调", "易宝", "渠道流水", "支付失败", "支付成功时间"],
+      "relations": [
+        "sale_payment_channel_order.payment_order_no -> sale_payment_order.payment_order_no"
+      ]
+    },
+    {
+      "table": "edu_student",
+      "business_name": "学员表",
+      "desc": "存储学员学号、姓名、学校、学历、学习方式、班级、产品和加入时间。用于学员规模、来源和班级归属分析。",
+      "keywords": ["学员", "学生", "学校", "学历", "学习方式", "加入时间"],
+      "relations": [
+        "edu_student.class_id -> edu_class.id",
+        "edu_student.product_id -> sale_product.id",
+        "sale_order.student_code -> edu_student.student_code",
+        "homework_submission.student_no -> edu_student.student_code",
+        "edu_student_daily_moment.student_no -> edu_student.student_code"
+      ],
+      "common_metrics": ["学员数", "线上学员数", "线下学员数", "新增学员数"]
+    },
+    {
+      "table": "homework_assignment",
+      "business_name": "作业发布表",
+      "desc": "存储老师发布给班级的作业、作业日期、发布时间、截止时间、状态和答案发布状态。用于作业发布统计。",
+      "keywords": ["作业", "作业发布", "答案发布", "截止时间"],
+      "relations": [
+        "homework_assignment.class_id -> edu_class.id",
+        "homework_assignment.course_id -> edu_course.id",
+        "homework_assignment.course_detail_id -> edu_course_detail.id",
+        "homework_submission.assignment_id -> homework_assignment.id"
+      ],
+      "common_metrics": ["作业发布数"]
+    },
+    {
+      "table": "homework_submission",
+      "business_name": "作业提交表",
+      "desc": "存储学员作业提交、提交状态、得分、批改老师和批改时间。用于作业提交率、批改情况和平均分分析。",
+      "keywords": ["作业提交", "提交率", "批改", "得分", "平均分", "未批改"],
+      "relations": [
+        "homework_submission.assignment_id -> homework_assignment.id",
+        "homework_submission.student_no -> edu_student.student_code"
+      ],
+      "common_metrics": ["作业提交数", "已批改数", "平均作业得分"]
+    },
+    {
+      "table": "edu_student_daily_moment",
+      "business_name": "学生日常剪影表",
+      "desc": "存储学生提交的图片、视频和文字素材记录。用于统计学生日常剪影提交数量和活跃情况。",
+      "keywords": ["日常剪影", "素材", "图片", "视频", "学生动态"],
+      "relations": [
+        "edu_student_daily_moment.student_no -> edu_student.student_code"
+      ],
+      "common_metrics": ["素材提交数"]
+    }
+]
