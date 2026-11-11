@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.payment.mapper.PaymentChannelOrderMapper">
+
+    <resultMap id="PaymentChannelOrderMap" type="cn.yq.modules.payment.domain.entity.PaymentChannelOrderEntity">
+        <id property="id" column="id"/>
+        <result property="paymentOrderNo" column="payment_order_no"/>
+        <result property="uniqueOrderNo" column="unique_order_no"/>
+        <result property="merchantNo" column="merchant_no"/>
+        <result property="orderId" column="order_id"/>
+        <result property="channelOrderId" column="channel_order_id"/>
+        <result property="orderAmount" column="order_amount"/>
+        <result property="payAmount" column="pay_amount"/>
+        <result property="status" column="status"/>
+        <result property="paySuccessDate" column="pay_success_date"/>
+        <result property="channel" column="channel"/>
+        <result property="payerInfo" column="payer_info"/>
+        <result property="failCode" column="fail_code"/>
+        <result property="failReason" column="fail_reason"/>
+        <result property="channelTrxId" column="channel_trx_id"/>
+        <result property="bankOrderId" column="bank_order_id"/>
+        <result property="callbackType" column="callback_type"/>
+        <result property="callbackBody" column="callback_body"/>
+        <result property="callbackTime" column="callback_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sale_payment_channel_order (
+            payment_order_no, unique_order_no, merchant_no, order_id, channel_order_id, order_amount, pay_amount, status,
+            pay_success_date, channel, payer_info, fail_code, fail_reason, channel_trx_id, bank_order_id, callback_type,
+            callback_body, callback_time, created_at, updated_at
+        ) values (
+            #{paymentOrderNo}, #{uniqueOrderNo}, #{merchantNo}, #{orderId}, #{channelOrderId}, #{orderAmount}, #{payAmount}, #{status},
+            #{paySuccessDate}, #{channel}, #{payerInfo}, #{failCode}, #{failReason}, #{channelTrxId}, #{bankOrderId}, #{callbackType},
+            #{callbackBody}, #{callbackTime}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateById">
+        update sale_payment_channel_order
+        set payment_order_no = #{paymentOrderNo},
+            merchant_no = #{merchantNo},
+            order_id = #{orderId},
+            channel_order_id = #{channelOrderId},
+            order_amount = #{orderAmount},
+            pay_amount = #{payAmount},
+            status = #{status},
+            pay_success_date = #{paySuccessDate},
+            channel = #{channel},
+            payer_info = #{payerInfo},
+            fail_code = #{failCode},
+            fail_reason = #{failReason},
+            channel_trx_id = #{channelTrxId},
+            bank_order_id = #{bankOrderId},
+            callback_type = #{callbackType},
+            callback_body = #{callbackBody},
+            callback_time = #{callbackTime},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectByUniqueOrderNo" resultMap="PaymentChannelOrderMap">
+        select id, payment_order_no, unique_order_no, merchant_no, order_id, channel_order_id, order_amount, pay_amount, status,
+               pay_success_date, channel, payer_info, fail_code, fail_reason, channel_trx_id, bank_order_id, callback_type,
+               callback_body, callback_time, created_at, updated_at
+        from sale_payment_channel_order
+        where unique_order_no = #{uniqueOrderNo}
+        limit 1
+    </select>
+
+    <select id="selectLatestByPaymentOrderNo" resultMap="PaymentChannelOrderMap">
+        select id, payment_order_no, unique_order_no, merchant_no, order_id, channel_order_id, order_amount, pay_amount, status,
+               pay_success_date, channel, payer_info, fail_code, fail_reason, channel_trx_id, bank_order_id, callback_type,
+               callback_body, callback_time, created_at, updated_at
+        from sale_payment_channel_order
+        where payment_order_no = #{paymentOrderNo}
+        order by id desc
+        limit 1
+    </select>
+</mapper>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.payment.mapper.PaymentOrderMapper">
+
+    <resultMap id="PaymentOrderMap" type="cn.yq.modules.payment.domain.entity.PaymentOrderEntity">
+        <id property="id" column="id"/>
+        <result property="paymentOrderNo" column="payment_order_no"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="studentName" column="student_name"/>
+        <result property="phone" column="phone"/>
+        <result property="productName" column="product_name"/>
+        <result property="paymentAmount" column="payment_amount"/>
+        <result property="paymentChannel" column="payment_channel"/>
+        <result property="paymentStatus" column="payment_status"/>
+        <result property="uniqueOrderNo" column="unique_order_no"/>
+        <result property="cashierUrl" column="cashier_url"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="merchantNo" column="merchant_no"/>
+        <result property="lastErrorMsg" column="last_error_msg"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into sale_payment_order (
+            payment_order_no, order_no, student_code, student_name, phone, product_name, payment_amount,
+            payment_channel, payment_status, cashier_url, expires_at, merchant_no, created_at, updated_at
+        ) values (
+            #{paymentOrderNo}, #{orderNo}, #{studentCode}, #{studentName}, #{phone}, #{productName}, #{paymentAmount},
+            #{paymentChannel}, #{paymentStatus}, #{cashierUrl}, #{expiresAt}, #{merchantNo}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectByPaymentOrderNo" resultMap="PaymentOrderMap">
+        select cashier_url, expires_at, merchant_no, id, payment_order_no, order_no, student_code, student_name, phone, product_name, payment_amount,
+               payment_channel, payment_status, unique_order_no, last_error_msg,
+               created_at, updated_at
+        from sale_payment_order
+        where payment_order_no = #{paymentOrderNo}
+        limit 1
+    </select>
+
+    <select id="selectLatestByOrderNo" resultMap="PaymentOrderMap">
+        select cashier_url, expires_at, merchant_no, id, payment_order_no, order_no, student_code, student_name, phone, product_name, payment_amount,
+               payment_channel, payment_status, unique_order_no, last_error_msg,
+               created_at, updated_at
+        from sale_payment_order
+        where order_no = #{orderNo}
+        order by id desc
+        limit 1
+    </select>
+
+    <select id="selectByUniqueOrderNo" resultMap="PaymentOrderMap">
+        select cashier_url, expires_at, merchant_no, id, payment_order_no, order_no, student_code, student_name, phone, product_name, payment_amount,
+               payment_channel, payment_status, unique_order_no, last_error_msg,
+               created_at, updated_at
+        from sale_payment_order
+        where unique_order_no = #{uniqueOrderNo}
+        limit 1
+    </select>
+
+    <select id="selectPage" resultMap="PaymentOrderMap">
+        select cashier_url, expires_at, merchant_no, id, payment_order_no, order_no, student_code, student_name, phone, product_name, payment_amount,
+               payment_channel, payment_status, unique_order_no, last_error_msg,
+               created_at, updated_at
+        from sale_payment_order
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    payment_order_no like concat('%', #{keyword}, '%')
+                    or order_no like concat('%', #{keyword}, '%')
+                    or student_code like concat('%', #{keyword}, '%')
+                    or student_name like concat('%', #{keyword}, '%')
+                    or phone like concat('%', #{keyword}, '%')
+                    or product_name like concat('%', #{keyword}, '%')
+                    or ifnull(unique_order_no, '') like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="paymentStatus != null and paymentStatus != ''">
+                and payment_status = #{paymentStatus}
+            </if>
+            <if test="paymentChannel != null and paymentChannel != ''">
+                and payment_channel = #{paymentChannel}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <update id="updateProcessingStatus">
+        update sale_payment_order
+        set payment_status = #{toStatus},
+            last_error_msg = null,
+            updated_at = now()
+        where id = #{id}
+          and payment_status = #{fromStatus}
+    </update>
+
+    <update id="updateUnifiedOrderResult">
+        update sale_payment_order
+        set payment_status = #{paymentStatus},
+            unique_order_no = #{uniqueOrderNo},
+            cashier_url = #{cashierUrl},
+            expires_at = #{expiresAt},
+            last_error_msg = #{lastErrorMsg},
+            updated_at = #{updatedAt}
+        where id = #{id} and payment_status = 'PROCESSING'
+    </update>
+
+    <update id="updateFailure">
+        update sale_payment_order
+        set payment_status = #{paymentStatus},
+            last_error_msg = #{lastErrorMsg},
+            updated_at = now()
+        where id = #{id} and payment_status in ('INIT', 'PROCESSING')
+    </update>
+
+    <update id="updateCallbackResult">
+        update sale_payment_order
+        set unique_order_no = #{uniqueOrderNo},
+            payment_status = #{paymentStatus},
+            last_error_msg = #{lastErrorMsg},
+            updated_at = #{updatedAt}
+        where id = #{id} and payment_status != 'PAY_SUCCESS'
+    </update>
+
+    <update id="updateStatusByIdAndCurrentStatus">
+        update sale_payment_order
+        set payment_status = #{toStatus},
+            last_error_msg = #{lastErrorMsg},
+            updated_at = now()
+        where id = #{id}
+          and payment_status = #{fromStatus}
+    </update>
+</mapper>

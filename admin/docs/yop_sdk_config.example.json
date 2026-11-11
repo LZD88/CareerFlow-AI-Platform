@@ -1,0 +1,18 @@
+{
+  "appKey": "REPLACE_WITH_YOP_APP_KEY",
+  "isvPrivateKey": [
+    {
+      "appKey": "REPLACE_WITH_YOP_APP_KEY",
+      "certType": "RSA2048",
+      "storeType": "STRING",
+      "value": "REPLACE_WITH_MERCHANT_PKCS8_PRIVATE_KEY"
+    }
+  ],
+  "yopPublicKey": [
+    {
+      "certType": "RSA2048",
+      "storeType": "STRING",
+      "value": "REPLACE_WITH_YOP_PLATFORM_PUBLIC_KEY"
+    }
+  ]
+}
