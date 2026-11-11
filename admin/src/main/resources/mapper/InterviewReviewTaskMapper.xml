@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.interviewreview.mapper.InterviewReviewTaskMapper">
+
+    <resultMap id="InterviewReviewTaskMap" type="cn.yq.modules.interviewreview.domain.entity.InterviewReviewTaskEntity">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="candidateName" column="candidate_name"/>
+        <result property="interviewRole" column="interview_role"/>
+        <result property="originalFilename" column="original_filename"/>
+        <result property="audioObjectKey" column="audio_object_key"/>
+        <result property="audioUrl" column="audio_url"/>
+        <result property="audioContentType" column="audio_content_type"/>
+        <result property="audioSize" column="audio_size"/>
+        <result property="resumeFilename" column="resume_filename"/>
+        <result property="resumeObjectKey" column="resume_object_key"/>
+        <result property="resumeUrl" column="resume_url"/>
+        <result property="resumeContentType" column="resume_content_type"/>
+        <result property="resumeSize" column="resume_size"/>
+        <result property="status" column="status"/>
+        <result property="transcriptText" column="transcript_text"/>
+        <result property="reviewReport" column="review_report"/>
+        <result property="failReason" column="fail_reason"/>
+        <result property="questionStatus" column="question_status"/>
+        <result property="questionExtractedCount" column="question_extracted_count"/>
+        <result property="questionCreatedCount" column="question_created_count"/>
+        <result property="questionMergedCount" column="question_merged_count"/>
+        <result property="questionFailReason" column="question_fail_reason"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, title, candidate_name, interview_role, original_filename, audio_object_key, audio_url,
+        audio_content_type, audio_size, resume_filename, resume_object_key, resume_url, resume_content_type, resume_size,
+        status, transcript_text, review_report, fail_reason,
+        question_status, question_extracted_count, question_created_count, question_merged_count, question_fail_reason,
+        created_by, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into interview_review_task (
+            title, candidate_name, interview_role, original_filename, audio_object_key, audio_url,
+            audio_content_type, audio_size, resume_filename, resume_object_key, resume_url, resume_content_type, resume_size,
+            status, transcript_text, review_report, fail_reason,
+            question_status, question_extracted_count, question_created_count, question_merged_count, question_fail_reason,
+            created_by, created_at, updated_at
+        ) values (
+            #{title}, #{candidateName}, #{interviewRole}, #{originalFilename}, #{audioObjectKey}, #{audioUrl},
+            #{audioContentType}, #{audioSize}, #{resumeFilename}, #{resumeObjectKey}, #{resumeUrl}, #{resumeContentType}, #{resumeSize},
+            #{status}, #{transcriptText}, #{reviewReport}, #{failReason},
+            #{questionStatus}, #{questionExtractedCount}, #{questionCreatedCount}, #{questionMergedCount}, #{questionFailReason},
+            #{createdBy}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectById" resultMap="InterviewReviewTaskMap">
+        select <include refid="BaseColumns"/>
+        from interview_review_task
+        where id = #{id}
+    </select>
+
+    <select id="selectPage" resultMap="InterviewReviewTaskMap">
+        select <include refid="BaseColumns"/>
+        from interview_review_task
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    title like concat('%', #{keyword}, '%')
+                    or candidate_name like concat('%', #{keyword}, '%')
+                    or interview_role like concat('%', #{keyword}, '%')
+                    or original_filename like concat('%', #{keyword}, '%')
+                    or resume_filename like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+    <update id="updateStatus">
+        update interview_review_task
+        set status = #{status},
+            fail_reason = #{failReason},
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateTranscribing">
+        update interview_review_task
+        set status = 'TRANSCRIBING',
+            transcript_text = null,
+            fail_reason = null,
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateTranscribed">
+        update interview_review_task
+        set status = 'TRANSCRIBED',
+            transcript_text = #{transcriptText},
+            fail_reason = null,
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateReviewing">
+        update interview_review_task
+        set status = 'REVIEWING',
+            fail_reason = null,
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateReviewed">
+        update interview_review_task
+        set status = 'DONE',
+            review_report = #{reviewReport},
+            fail_reason = null,
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateResume">
+        update interview_review_task
+        set resume_filename = #{resumeFilename},
+            resume_object_key = #{resumeObjectKey},
+            resume_url = #{resumeUrl},
+            resume_content_type = #{resumeContentType},
+            resume_size = #{resumeSize},
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateQuestionGenerating">
+        update interview_review_task
+        set question_status = 'PROCESSING',
+            question_extracted_count = 0,
+            question_created_count = 0,
+            question_merged_count = 0,
+            question_fail_reason = null,
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateQuestionGenerated">
+        update interview_review_task
+        set question_status = 'DONE',
+            question_extracted_count = #{extractedCount},
+            question_created_count = #{createdCount},
+            question_merged_count = #{mergedCount},
+            question_fail_reason = null,
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="updateQuestionFailed">
+        update interview_review_task
+        set question_status = 'FAILED',
+            question_fail_reason = #{failReason},
+            updated_at = now()
+        where id = #{id}
+    </update>
+</mapper>

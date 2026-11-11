@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.studentportal.mapper.MockInterviewSessionMapper">
+
+    <resultMap id="MockInterviewSessionMap" type="cn.yq.modules.studentportal.domain.entity.mockinterview.MockInterviewSessionEntity">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="studentName" column="student_name"/>
+        <result property="title" column="title"/>
+        <result property="interviewRole" column="interview_role"/>
+        <result property="status" column="status"/>
+        <result property="volcSessionId" column="volc_session_id"/>
+        <result property="realtimeToken" column="realtime_token"/>
+        <result property="realtimeTokenExpiresAt" column="realtime_token_expires_at"/>
+        <result property="transcriptText" column="transcript_text"/>
+        <result property="failReason" column="fail_reason"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="endedAt" column="ended_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, student_id, student_code, student_name, title, interview_role, status, volc_session_id,
+        realtime_token, realtime_token_expires_at, transcript_text, fail_reason,
+        started_at, ended_at, created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into mock_interview_session (
+            student_id, student_code, student_name, title, interview_role, status, volc_session_id,
+            realtime_token, realtime_token_expires_at, transcript_text, fail_reason,
+            started_at, ended_at, created_at, updated_at
+        ) values (
+            #{studentId}, #{studentCode}, #{studentName}, #{title}, #{interviewRole}, #{status}, #{volcSessionId},
+            #{realtimeToken}, #{realtimeTokenExpiresAt}, #{transcriptText}, #{failReason},
+            #{startedAt}, #{endedAt}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <select id="selectByIdAndStudentId" resultMap="MockInterviewSessionMap">
+        select <include refid="BaseColumns"/>
+        from mock_interview_session
+        where id = #{id}
+          and student_id = #{studentId}
+    </select>
+
+    <update id="updateRealtimeToken">
+        update mock_interview_session
+        set realtime_token = #{realtimeToken},
+            realtime_token_expires_at = #{realtimeTokenExpiresAt},
+            updated_at = now()
+        where id = #{id}
+    </update>
+</mapper>

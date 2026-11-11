@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.studentresume.mapper.StudentResumeMapper">
+
+    <resultMap id="StudentResumeMap" type="cn.yq.modules.studentresume.domain.entity.StudentResumeEntity">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="studentName" column="student_name"/>
+        <result property="resumeName" column="resume_name"/>
+        <result property="targetRole" column="target_role"/>
+        <result property="contentType" column="content_type"/>
+        <result property="resumeText" column="resume_text"/>
+        <result property="resumeSummary" column="resume_summary"/>
+        <result property="resumeFileUrl" column="resume_file_url"/>
+        <result property="parseStatus" column="parse_status"/>
+        <result property="defaultResume" column="is_default"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, student_id, student_code, student_name, resume_name, target_role, content_type,
+        resume_text, resume_summary, resume_file_url, parse_status, is_default, status,
+        created_at, updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into student_resume (
+            student_id, student_code, student_name, resume_name, target_role, content_type,
+            resume_text, resume_summary, resume_file_url, parse_status, is_default, status,
+            created_at, updated_at
+        ) values (
+            #{studentId}, #{studentCode}, #{studentName}, #{resumeName}, #{targetRole}, #{contentType},
+            #{resumeText}, #{resumeSummary}, #{resumeFileUrl}, #{parseStatus}, #{defaultResume}, #{status},
+            #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="update">
+        update student_resume
+        set resume_name = #{resumeName},
+            target_role = #{targetRole},
+            resume_text = #{resumeText},
+            resume_summary = #{resumeSummary},
+            resume_file_url = #{resumeFileUrl},
+            content_type = #{contentType},
+            parse_status = #{parseStatus},
+            is_default = #{defaultResume},
+            updated_at = now()
+        where id = #{id}
+          and student_id = #{studentId}
+          and status = 1
+    </update>
+
+    <select id="selectById" resultMap="StudentResumeMap">
+        select <include refid="BaseColumns"/>
+        from student_resume
+        where id = #{id}
+          and status = 1
+    </select>
+
+    <select id="selectByIdAndStudentId" resultMap="StudentResumeMap">
+        select <include refid="BaseColumns"/>
+        from student_resume
+        where id = #{id}
+          and student_id = #{studentId}
+          and status = 1
+    </select>
+
+    <select id="selectByStudentId" resultMap="StudentResumeMap">
+        select <include refid="BaseColumns"/>
+        from student_resume
+        where student_id = #{studentId}
+          and status = 1
+        order by is_default desc, updated_at desc, id desc
+    </select>
+
+    <select id="selectPage" resultMap="StudentResumeMap">
+        select <include refid="BaseColumns"/>
+        from student_resume
+        where status = 1
+        <if test="keyword != null and keyword != ''">
+            and (
+                student_name like concat('%', #{keyword}, '%')
+                or student_code like concat('%', #{keyword}, '%')
+                or resume_name like concat('%', #{keyword}, '%')
+                or resume_text like concat('%', #{keyword}, '%')
+                or resume_summary like concat('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="targetRole != null and targetRole != ''">
+            and target_role like concat('%', #{targetRole}, '%')
+        </if>
+        <if test="defaultResume != null">
+            and is_default = #{defaultResume}
+        </if>
+        order by updated_at desc, id desc
+    </select>
+
+    <update id="clearDefault">
+        update student_resume
+        set is_default = 0,
+            updated_at = now()
+        where student_id = #{studentId}
+          and status = 1
+        <if test="excludeId != null">
+            and id != #{excludeId}
+        </if>
+    </update>
+
+    <update id="setDefault">
+        update student_resume
+        set is_default = 1,
+            updated_at = now()
+        where id = #{id}
+          and student_id = #{studentId}
+          and status = 1
+    </update>
+
+    <update id="softDelete">
+        update student_resume
+        set status = 0,
+            is_default = 0,
+            updated_at = now()
+        where id = #{id}
+          and status = 1
+    </update>
+
+    <update id="softDeleteByStudent">
+        update student_resume
+        set status = 0,
+            is_default = 0,
+            updated_at = now()
+        where id = #{id}
+          and student_id = #{studentId}
+          and status = 1
+    </update>
+</mapper>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.interviewreview.mapper.InterviewQuestionBankMapper">
+
+    <resultMap id="QuestionBankMap" type="cn.yq.modules.interviewreview.domain.entity.InterviewQuestionBankEntity">
+        <id property="id" column="id"/>
+        <result property="normalizedQuestion" column="normalized_question"/>
+        <result property="category" column="category"/>
+        <result property="tags" column="tags"/>
+        <result property="standardAnswer" column="standard_answer"/>
+        <result property="shortAnswer" column="short_answer"/>
+        <result property="followUpQuestions" column="follow_up_questions"/>
+        <result property="pitfalls" column="pitfalls"/>
+        <result property="sourceCount" column="source_count"/>
+        <result property="lastSourceTaskId" column="last_source_task_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, normalized_question, category, tags, standard_answer, short_answer, follow_up_questions, pitfalls,
+        source_count, last_source_task_id, created_at, updated_at
+    </sql>
+
+    <select id="selectPage" resultMap="QuestionBankMap">
+        select <include refid="BaseColumns"/>
+        from interview_question_bank
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    normalized_question like concat('%', #{keyword}, '%')
+                    or standard_answer like concat('%', #{keyword}, '%')
+                    or tags like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="category != null and category != ''">
+                and category = #{category}
+            </if>
+        </where>
+        order by updated_at desc, id desc
+    </select>
+
+    <select id="selectById" resultMap="QuestionBankMap">
+        select <include refid="BaseColumns"/>
+        from interview_question_bank
+        where id = #{id}
+    </select>
+
+    <select id="selectByNormalizedQuestion" resultMap="QuestionBankMap">
+        select <include refid="BaseColumns"/>
+        from interview_question_bank
+        where normalized_question = #{normalizedQuestion}
+        limit 1
+    </select>
+
+    <insert id="insertQuestion" useGeneratedKeys="true" keyProperty="id">
+        insert into interview_question_bank (
+            normalized_question, category, tags, standard_answer, short_answer, follow_up_questions, pitfalls,
+            source_count, last_source_task_id, created_at, updated_at
+        ) values (
+            #{normalizedQuestion}, #{category}, #{tags}, #{standardAnswer}, #{shortAnswer}, #{followUpQuestions}, #{pitfalls},
+            #{sourceCount}, #{lastSourceTaskId}, now(), now()
+        )
+    </insert>
+
+    <update id="updateQuestion">
+        update interview_question_bank
+        set category = #{category},
+            tags = #{tags},
+            standard_answer = #{standardAnswer},
+            short_answer = #{shortAnswer},
+            follow_up_questions = #{followUpQuestions},
+            pitfalls = #{pitfalls},
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <update id="incrementSourceCount">
+        update interview_question_bank
+        set source_count = source_count + 1,
+            last_source_task_id = #{lastSourceTaskId},
+            updated_at = now()
+        where id = #{id}
+    </update>
+
+    <insert id="insertSource" useGeneratedKeys="true" keyProperty="id">
+        insert into interview_question_source (
+            question_id, task_id, original_question, answer_context,
+            student_answer_quality, student_answer_score, student_answer_analysis, improvement_suggestion,
+            created_at
+        ) values (
+            #{questionId}, #{taskId}, #{originalQuestion}, #{answerContext},
+            #{studentAnswerQuality}, #{studentAnswerScore}, #{studentAnswerAnalysis}, #{improvementSuggestion},
+            now()
+        )
+        on duplicate key update
+            answer_context = values(answer_context),
+            student_answer_quality = values(student_answer_quality),
+            student_answer_score = values(student_answer_score),
+            student_answer_analysis = values(student_answer_analysis),
+            improvement_suggestion = values(improvement_suggestion)
+    </insert>
+
+    <select id="selectSourcesByQuestionId" resultType="cn.yq.modules.interviewreview.domain.vo.res.InterviewQuestionSourceRes">
+        select s.id,
+               s.question_id as questionId,
+               s.task_id as taskId,
+               t.title as taskTitle,
+               t.interview_role as interviewRole,
+               t.original_filename as originalFilename,
+               s.original_question as originalQuestion,
+               s.answer_context as answerContext,
+               s.student_answer_quality as studentAnswerQuality,
+               s.student_answer_score as studentAnswerScore,
+               s.student_answer_analysis as studentAnswerAnalysis,
+               s.improvement_suggestion as improvementSuggestion,
+               s.created_at as createdAt
+        from interview_question_source s
+        left join interview_review_task t on t.id = s.task_id
+        where s.question_id = #{questionId}
+        order by s.id desc
+    </select>
+</mapper>
