@@ -1,0 +1,38 @@
+# Actual environment and cloud credentials
+.env
+.env.*
+!.env.example
+!.env.production.example
+**/application-dev.yaml
+**/application-prod.yaml
+**/yop_sdk_config.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Dependencies and generated output
+node_modules/
+target/
+dist/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.tsbuildinfo
+web/vite.config.js
+web/vite.config.d.ts
+generated-images/
+.local-run/
+*.log
+*.sql.bak
+*.dump
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
