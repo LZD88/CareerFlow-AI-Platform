@@ -1,0 +1,2 @@
+export const ACCESS_TOKEN_KEY = 'YQ_ADMIN_ACCESS_TOKEN';
+export const LOGIN_USER_KEY = 'YQ_ADMIN_LOGIN_USER';
