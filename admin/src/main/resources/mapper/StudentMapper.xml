@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yq.modules.student.mapper.StudentMapper">
+
+    <resultMap id="StudentMap" type="cn.yq.modules.student.domain.entity.StudentEntity">
+        <id property="id" column="id"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="studentName" column="student_name"/>
+        <result property="phone" column="phone"/>
+        <result property="password" column="password"/>
+        <result property="graduationSession" column="graduation_session"/>
+        <result property="school" column="school"/>
+        <result property="education" column="education"/>
+        <result property="studyMode" column="study_mode"/>
+        <result property="classId" column="class_id"/>
+        <result property="className" column="class_name"/>
+        <result property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="joinTime" column="join_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        s.id,
+        s.student_code,
+        s.student_name,
+        s.phone,
+        s.password,
+        s.graduation_session,
+        s.school,
+        s.education,
+        s.study_mode,
+        s.class_id,
+        case when c.id is null then null else concat(c.class_term, '期') end as class_name,
+        s.product_id,
+        p.product_name,
+        s.join_time,
+        s.created_at,
+        s.updated_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into edu_student (
+            student_code, student_name, phone, password, graduation_session, school, education, study_mode,
+            class_id, product_id, join_time, created_at, updated_at
+        ) values (
+            #{studentCode}, #{studentName}, #{phone}, #{password}, #{graduationSession}, #{school}, #{education}, #{studyMode},
+            #{classId}, #{productId}, #{joinTime}, #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateById">
+        update edu_student
+        set student_code = #{studentCode},
+            student_name = #{studentName},
+            phone = #{phone},
+            password = #{password},
+            graduation_session = #{graduationSession},
+            school = #{school},
+            education = #{education},
+            study_mode = #{studyMode},
+            class_id = #{classId},
+            product_id = #{productId},
+            join_time = #{joinTime},
+            updated_at = #{updatedAt}
+        where id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="StudentMap">
+        select <include refid="BaseColumns"/>
+        from edu_student s
+        left join edu_class c on c.id = s.class_id
+        left join sale_product p on p.id = s.product_id
+        where s.id = #{id}
+    </select>
+
+    <select id="selectByStudentCode" resultMap="StudentMap">
+        select <include refid="BaseColumns"/>
+        from edu_student s
+        left join edu_class c on c.id = s.class_id
+        left join sale_product p on p.id = s.product_id
+        where s.student_code = #{studentCode}
+        limit 1
+    </select>
+
+    <select id="selectByPhone" resultMap="StudentMap">
+        select <include refid="BaseColumns"/>
+        from edu_student s
+        left join edu_class c on c.id = s.class_id
+        left join sale_product p on p.id = s.product_id
+        where s.phone = #{phone}
+        limit 1
+    </select>
+
+    <select id="selectPage" resultMap="StudentMap">
+        select <include refid="BaseColumns"/>
+        from edu_student s
+        left join edu_class c on c.id = s.class_id
+        left join sale_product p on p.id = s.product_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (
+                    s.student_code like concat('%', #{keyword}, '%')
+                    or s.student_name like concat('%', #{keyword}, '%')
+                    or s.phone like concat('%', #{keyword}, '%')
+                    or s.school like concat('%', #{keyword}, '%')
+                    or ifnull(p.product_name, '') like concat('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="studyMode != null and studyMode != ''">
+                and s.study_mode = #{studyMode}
+            </if>
+            <if test="classId != null">
+                and s.class_id = #{classId}
+            </if>
+            <if test="productId != null">
+                and s.product_id = #{productId}
+            </if>
+        </where>
+        order by s.id desc
+    </select>
+
+    <delete id="deleteById">
+        delete from edu_student where id = #{id}
+    </delete>
+</mapper>
